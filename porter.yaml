@@ -2,7 +2,7 @@ version: v2
 name: testserver
 services:
 - name: txx
-  run: python /app/server.py
+  run: "sh -c 'echo \"[nstest] PORTER_PR_NAMESPACE=$PORTER_PR_NAMESPACE\"; echo \"[nstest] PORTER_PR_BRANCH=$PORTER_PR_BRANCH\"; getent hosts \"$PORTER_APP_SERVICE_NAME.$PORTER_PR_NAMESPACE.svc.cluster.local\" && echo \"[nstest] ns-dns OK\" || echo \"[nstest] ns-dns FAIL\"; getent hosts \"$PORTER_APP_SERVICE_NAME.$PORTER_PR_BRANCH.svc.cluster.local\" && echo \"[nstest] branch-dns OK\" || echo \"[nstest] branch-dns FAIL-expected\"; exec python3 /app/server.py'"
   type: web
   instances: 1
   cpuCores: 0.2
