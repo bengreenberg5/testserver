@@ -128,11 +128,25 @@ class SimpleHandler(BaseHTTPRequestHandler):
     metrics = MetricsCollector()
 
     def log_request_info(self, status_code, duration):
-        """Log information about the request"""
-        client_ip = self.client_address[0]
+        """Log information about the request.
+
+        peer is the TCP peer (behind ingress-nginx this is the nginx pod IP).
+        The original client only arrives in headers set by the proxy:
+        X-Real-IP / X-Forwarded-For. Those are proxy-supplied and spoofable
+        when the ingress trusts client-sent X-Forwarded-For, so both the peer
+        and the headers are logged side by side.
+        """
+        peer = self.client_address[0]
         method = self.command
         path = self.path
-        logger.info(f"Request: {client_ip} - {method} {path} - Status: {status_code} - Duration: {duration:.3f}s")
+        xff = self.headers.get('X-Forwarded-For', '-')
+        real_ip = self.headers.get('X-Real-IP', '-')
+        host = self.headers.get('Host', '-')
+        user_agent = self.headers.get('User-Agent', '-')
+        logger.info(
+            f"Request: peer={peer} x_real_ip={real_ip} x_forwarded_for={xff} host={host} "
+            f"- {method} {path} - Status: {status_code} - Duration: {duration:.3f}s - UA: {user_agent}"
+        )
         # Record metrics
         self.metrics.record_request(path, status_code, duration)
 
